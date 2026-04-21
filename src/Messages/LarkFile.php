@@ -14,6 +14,12 @@ class LarkFile
 
     protected ?string $fileKey = null;
 
+    /** Local path pending upload */
+    protected ?string $localPath = null;
+
+    /** UploadedFile instance pending upload */
+    protected ?object $uploadedFile = null;
+
     protected ?string $caption = null;
 
     protected array $additionalParams = [];
@@ -82,6 +88,77 @@ class LarkFile
     {
         $this->fileType = 'media';
         $this->fileKey = $fileKey;
+
+        return $this;
+    }
+
+    /**
+     * Set a local file path to be uploaded automatically when the
+     * notification is sent. The channel calls uploader() internally.
+     *
+     * @example
+     *   LarkFile::create()->uploadPath('/storage/reports/monthly.pdf')->to($id)
+     *   LarkFile::create()->uploadPath(storage_path('app/photo.jpg'))->to($id)
+     */
+    public function uploadPath(string $path, ?string $forcedType = null): static
+    {
+        $this->localPath = $path;
+
+        // Pre-detect the type so toArray() knows what msg_type to set
+        if ($forcedType) {
+            $this->fileType = $forcedType;
+        } else {
+            $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+            $this->fileType = in_array($ext, ['jpg','jpeg','png','gif','webp','bmp','tiff'], true)
+                ? 'image' : 'file';
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set a Laravel UploadedFile to be uploaded automatically.
+     *
+     * @param  \Illuminate\Http\UploadedFile  $file
+     *
+     * @example
+     *   LarkFile::create()->uploadFromRequest($request->file('photo'))->to($id)
+     */
+    public function uploadFromRequest(object $file): static
+    {
+        $this->uploadedFile = $file;
+
+        $mime = method_exists($file, 'getMimeType') ? ($file->getMimeType() ?? '') : '';
+        if (str_starts_with($mime, 'image/'))      $this->fileType = 'image';
+        elseif (str_starts_with($mime, 'video/'))  $this->fileType = 'media';
+        elseif (str_starts_with($mime, 'audio/'))  $this->fileType = 'audio';
+        else                                        $this->fileType = 'file';
+
+        return $this;
+    }
+
+    /**
+     * Check whether this message needs an upload before it can be sent.
+     * Called by LarkChannel before dispatching.
+     */
+    public function needsUpload(): bool
+    {
+        return $this->localPath !== null || $this->uploadedFile !== null;
+    }
+
+    /**
+     * Perform the upload using the given uploader and store the resulting key.
+     * Called automatically by LarkChannel — you don't need to call this yourself.
+     */
+    public function performUpload(\NotificationChannels\Lark\LarkUploader $uploader): static
+    {
+        if ($this->uploadedFile !== null) {
+            $this->fileKey = $uploader->uploadFromRequest($this->uploadedFile);
+        } elseif ($this->localPath !== null) {
+            $this->fileKey = ($this->fileType === 'image')
+                ? $uploader->uploadImage($this->localPath)
+                : $uploader->uploadFile($this->localPath);
+        }
 
         return $this;
     }

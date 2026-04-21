@@ -22,12 +22,18 @@ class LarkChannel
      * Send the notification.
      *
      * Called automatically by Laravel's notification system.
+     * Mirrors the send() method in laravel-notification-channels/telegram.
      */
     public function send(mixed $notifiable, Notification $notification): void
     {
         try {
             /** @var LarkMessage|LarkCard|LarkFile|LarkLocation $message */
             $message = $notification->toLark($notifiable);
+
+            // Auto-upload file/image if a local path or UploadedFile was set
+            if ($message instanceof LarkFile && $message->needsUpload()) {
+                $message->performUpload($this->lark->uploader());
+            }
 
             // ->to() on the message takes priority over routeNotificationForLark()
             $chatId = $message->getChatId()

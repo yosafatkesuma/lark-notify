@@ -86,6 +86,47 @@ class LarkClient
         return $this->tenantToken;
     }
 
+    // ── Upload shortcuts ──────────────────────────────────────────────────────
+
+    /**
+     * Get a LarkUploader instance pre-wired to this client.
+     *
+     * @example
+     *   $key = $client->uploader()->uploadImage('/path/to/photo.jpg');
+     *   $key = $client->uploader()->uploadFile('/path/to/report.pdf');
+     */
+    public function uploader(): LarkUploader
+    {
+        return new LarkUploader($this, $this->http, $this->baseUri, $this->timeout);
+    }
+
+    /**
+     * Upload an image and return its image_key.
+     * Shortcut for ->uploader()->uploadImage()
+     */
+    public function uploadImage(string $path, string $imageType = 'message'): string
+    {
+        return $this->uploader()->uploadImage($path, $imageType);
+    }
+
+    /**
+     * Upload a file and return its file_key.
+     * Shortcut for ->uploader()->uploadFile()
+     */
+    public function uploadFile(string $path, ?string $fileType = null): string
+    {
+        return $this->uploader()->uploadFile($path, $fileType);
+    }
+
+    /**
+     * Upload directly from a Laravel UploadedFile instance.
+     * Shortcut for ->uploader()->uploadFromRequest()
+     */
+    public function uploadFromRequest(object $uploadedFile): string
+    {
+        return $this->uploader()->uploadFromRequest($uploadedFile);
+    }
+
     // ── HTTP helper ───────────────────────────────────────────────────────────
 
     protected function post(string $url, array $body, array $headers = []): array
