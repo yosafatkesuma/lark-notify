@@ -4,7 +4,7 @@ namespace NotificationChannels\Lark\Messages;
 
 class LarkMessage
 {
-    /** The recipient's open_id / user_id / chat_id */
+    /** The recipient's open_id / user_id / chat_id / email / union_id */
     protected ?string $chatId = null;
 
     protected string $chatIdType = 'open_id';
@@ -21,7 +21,6 @@ class LarkMessage
 
     /**
      * Create a new message instance.
-     * Mirrors: TelegramMessage::create('Hello!')
      */
     public static function create(string $content = ''): static
     {
@@ -32,8 +31,6 @@ class LarkMessage
 
     /**
      * Set the recipient's ID.
-     * Mirrors: ->to($notifiable->telegram_user_id)
-     *
      * @param  string  $chatId   open_id / user_id / chat_id / email / union_id
      * @param  string  $type     open_id (default) | user_id | chat_id | email | union_id
      */

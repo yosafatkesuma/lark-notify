@@ -20,9 +20,6 @@ class LarkFile
 
     // ── Factory ───────────────────────────────────────────────────────────────
 
-    /**
-     * Mirrors: TelegramFile::create()
-     */
     public static function create(): static
     {
         return new static();

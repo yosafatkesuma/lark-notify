@@ -15,8 +15,6 @@ class LarkUpdates
     public function __construct(protected LarkClient $client) {}
 
     /**
-     * Mirrors: TelegramUpdates::create()
-     *
      * @example
      * LarkUpdates::create()->limit(5)->get();
      */

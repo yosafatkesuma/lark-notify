@@ -22,7 +22,6 @@ class LarkChannel
      * Send the notification.
      *
      * Called automatically by Laravel's notification system.
-     * Mirrors the send() method in laravel-notification-channels/telegram.
      */
     public function send(mixed $notifiable, Notification $notification): void
     {

@@ -18,9 +18,6 @@ class LarkLocation
 
     // ── Factory ───────────────────────────────────────────────────────────────
 
-    /**
-     * Mirrors: TelegramLocation::create()
-     */
     public static function create(): static
     {
         return new static();

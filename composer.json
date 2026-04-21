@@ -1,6 +1,6 @@
 {
     "name": "yosafatkesuma/lark-notify",
-    "description": "Lark / Feishu notification channel for Laravel — mirrors laravel-notification-channels/telegram",
+    "description": "Lark / Feishu notification channel for Laravel",
     "keywords": ["laravel", "lark", "feishu", "notification", "channel"],
     "license": "MIT",
     "require": {

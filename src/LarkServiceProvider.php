@@ -20,7 +20,6 @@ class LarkServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/lark.php', 'lark');
 
-        // Bind LarkClient as a singleton — mirrors TelegramServiceProvider
         $this->app->singleton(LarkClient::class, function ($app) {
             return new LarkClient(
                 http:       new HttpClient(),

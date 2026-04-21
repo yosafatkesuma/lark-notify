@@ -24,7 +24,6 @@ class LarkCard
 
     /**
      * Create a new card instance.
-     * Mirrors: TelegramMessage::create() — but for rich Lark cards.
      */
     public static function create(string $title = ''): static
     {
