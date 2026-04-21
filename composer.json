@@ -1,0 +1,42 @@
+{
+    "name": "yosafatkesuma/lark-notify",
+    "description": "Lark / Feishu notification channel for Laravel — mirrors laravel-notification-channels/telegram",
+    "keywords": ["laravel", "lark", "feishu", "notification", "channel"],
+    "license": "MIT",
+    "require": {
+        "php": "^8.1",
+        "illuminate/notifications": "^10.0|^11.0|^12.0",
+        "illuminate/support": "^10.0|^11.0|^12.0",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0|^11.0",
+        "mockery/mockery": "^1.6",
+        "orchestra/testbench": "^8.0|^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "NotificationChannels\\Lark\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "NotificationChannels\\Lark\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "NotificationChannels\\Lark\\LarkServiceProvider"
+            ],
+            "aliases": {
+                "Lark": "NotificationChannels\\Lark\\Facades\\Lark"
+            }
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
