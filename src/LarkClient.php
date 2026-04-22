@@ -42,14 +42,14 @@ class LarkClient
 
         $body = [
             'receive_id' => $receiveId,
-            'msg_type'   => $payload['msg_type'],
-            'content'    => json_encode($payload['content']),
+            'msg_type' => $payload['msg_type'],
+            'content' => json_encode($payload['content']),
         ];
 
         return $this->post(
             "{$this->baseUri}/im/v1/messages?receive_id_type={$receiveIdType}",
             $body,
-            ['Authorization' => "Bearer {$token}"]
+            ['Authorization' => "Bearer {$token}"],
         );
     }
 
@@ -70,13 +70,13 @@ class LarkClient
         }
 
         $response = $this->post("{$this->baseUri}/auth/v3/tenant_access_token/internal", [
-            'app_id'     => $this->appId,
+            'app_id' => $this->appId,
             'app_secret' => $this->appSecret,
         ]);
 
         if (empty($response['tenant_access_token'])) {
             throw CouldNotSendNotification::couldNotCommunicateWithLark(
-                'Failed to obtain tenant_access_token.'
+                'Failed to obtain tenant_access_token.',
             );
         }
 
@@ -133,7 +133,7 @@ class LarkClient
     {
         try {
             $response = $this->http->post($url, [
-                'json'    => $body,
+                'json' => $body,
                 'timeout' => $this->timeout,
                 'headers' => array_merge(['Content-Type' => 'application/json'], $headers),
             ]);
@@ -143,7 +143,7 @@ class LarkClient
             if (isset($decoded['code']) && $decoded['code'] !== 0) {
                 throw CouldNotSendNotification::larkRespondedWithAnError(
                     (int) $decoded['code'],
-                    (string) ($decoded['msg'] ?? 'unknown')
+                    (string) ($decoded['msg'] ?? 'unknown'),
                 );
             }
 

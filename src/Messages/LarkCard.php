@@ -2,8 +2,12 @@
 
 namespace NotificationChannels\Lark\Messages;
 
+use NotificationChannels\Lark\Messages\Concerns\HasAttachments;
+
 class LarkCard
 {
+    use HasAttachments;
+
     protected ?string $chatId = null;
 
     protected string $chatIdType = 'open_id';
@@ -156,32 +160,40 @@ class LarkCard
 
         if (! empty($this->lines)) {
             $elements[] = [
-                'tag'  => 'div',
+                'tag' => 'div',
                 'text' => ['tag' => 'lark_md', 'content' => implode("\n", $this->lines)],
             ];
         }
 
         if (! empty($this->fields)) {
             $elements[] = [
-                'tag'    => 'div',
+                'tag' => 'div',
                 'fields' => array_map(fn ($f) => [
                     'is_short' => $f['short'],
-                    'text'     => ['tag' => 'lark_md', 'content' => "**{$f['label']}**\n{$f['value']}"],
+                    'text' => ['tag' => 'lark_md', 'content' => "**{$f['label']}**\n{$f['value']}"],
                 ], $this->fields),
             ];
         }
 
+        foreach ($this->buildAttachmentElements() as $el) {
+            $elements[] = $el;
+        }
+
         if (! empty($this->actions)) {
             $elements[] = [
-                'tag'     => 'action',
+                'tag' => 'action',
                 'actions' => array_map(function ($a) {
                     $btn = [
-                        'tag'  => 'button',
+                        'tag' => 'button',
                         'text' => ['tag' => 'plain_text', 'content' => $a['text']],
                         'type' => $a['type'] ?? 'default',
                     ];
-                    if (isset($a['url']))   $btn['url']   = $a['url'];
-                    if (isset($a['value'])) $btn['value'] = $a['value'];
+                    if (isset($a['url'])) {
+                        $btn['url'] = $a['url'];
+                    }
+                    if (isset($a['value'])) {
+                        $btn['value'] = $a['value'];
+                    }
 
                     return $btn;
                 }, $this->actions),
@@ -190,11 +202,11 @@ class LarkCard
 
         return [
             'msg_type' => 'interactive',
-            'content'  => [
-                'config'   => ['wide_screen_mode' => $this->wideScreen],
-                'header'   => [
+            'content' => [
+                'config' => ['wide_screen_mode' => $this->wideScreen],
+                'header' => [
                     'template' => $this->color,
-                    'title'    => ['tag' => 'plain_text', 'content' => $this->title],
+                    'title' => ['tag' => 'plain_text', 'content' => $this->title],
                 ],
                 'elements' => $elements,
             ],

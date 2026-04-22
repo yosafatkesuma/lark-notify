@@ -65,24 +65,24 @@ class LarkUpdates
     public function get(): array
     {
         $token = $this->client->getTenantToken();
-        $base  = config('lark.base_uri', 'https://open.larksuite.com/open-apis');
+        $base = config('lark.base_uri', 'https://open.larksuite.com/open-apis');
 
         $query = http_build_query(array_filter([
-            'page_size'  => $this->limit,
+            'page_size' => $this->limit,
             'page_token' => $this->pageToken,
         ]));
 
         try {
             $response = app(\GuzzleHttp\Client::class)->get(
                 "{$base}/application/v6/applications/event?{$query}",
-                ['headers' => ['Authorization' => "Bearer {$token}"]]
+                ['headers' => ['Authorization' => "Bearer {$token}"]],
             );
 
             $data = json_decode((string) $response->getBody(), true);
 
             return [
-                'ok'            => ($data['code'] ?? -1) === 0,
-                'events'        => $data['data']['items'] ?? [],
+                'ok' => ($data['code'] ?? -1) === 0,
+                'events' => $data['data']['items'] ?? [],
                 'nextPageToken' => $data['data']['page_token'] ?? null,
             ];
 

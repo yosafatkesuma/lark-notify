@@ -24,16 +24,16 @@ class CouldNotSendNotification extends Exception
     public static function missingCredentials(): self
     {
         return new self(
-            'Lark app_id and app_secret are required for Bot API calls. '.
-            'Set LARK_APP_ID and LARK_APP_SECRET in your .env file.'
+            'Lark app_id and app_secret are required for Bot API calls. ' .
+            'Set LARK_APP_ID and LARK_APP_SECRET in your .env file.',
         );
     }
 
     public static function noRecipient(): self
     {
         return new self(
-            'No recipient specified. Either call ->to() on the message or '.
-            'implement routeNotificationForLark() on the notifiable.'
+            'No recipient specified. Either call ->to() on the message or ' .
+            'implement routeNotificationForLark() on the notifiable.',
         );
     }
 }

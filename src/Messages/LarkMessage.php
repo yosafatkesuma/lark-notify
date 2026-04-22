@@ -31,8 +31,9 @@ class LarkMessage
 
     /**
      * Set the recipient's ID.
-     * @param  string  $chatId   open_id / user_id / chat_id / email / union_id
-     * @param  string  $type     open_id (default) | user_id | chat_id | email | union_id
+     *
+     * @param  string  $chatId  open_id / user_id / chat_id / email / union_id
+     * @param  string  $type  open_id (default) | user_id | chat_id | email | union_id
      */
     public function to(string $chatId, string $type = 'open_id'): static
     {
@@ -101,10 +102,10 @@ class LarkMessage
     public function button(string $text, string $url, string $type = 'default'): static
     {
         $this->buttons[] = [
-            'tag'  => 'button',
+            'tag' => 'button',
             'text' => ['tag' => 'lark_md', 'content' => $text],
             'type' => $type,
-            'url'  => $url,
+            'url' => $url,
         ];
 
         return $this;
@@ -117,8 +118,8 @@ class LarkMessage
     public function buttonWithCallback(string $text, array $value): static
     {
         $this->buttons[] = [
-            'tag'   => 'button',
-            'text'  => ['tag' => 'plain_text', 'content' => $text],
+            'tag' => 'button',
+            'text' => ['tag' => 'plain_text', 'content' => $text],
             'value' => $value,
         ];
 
@@ -131,13 +132,13 @@ class LarkMessage
     public function buttonWithMultiUrl(string $text, array $urls): static
     {
         $this->buttons[] = [
-            'tag'       => 'button',
-            'text'      => ['tag' => 'plain_text', 'content' => $text],
+            'tag' => 'button',
+            'text' => ['tag' => 'plain_text', 'content' => $text],
             'multi_url' => [
-                'url'         => $urls['url'],
+                'url' => $urls['url'],
                 'android_url' => $urls['android'] ?? null,
-                'ios_url'     => $urls['ios'] ?? null,
-                'pc_url'      => $urls['pc'] ?? null,
+                'ios_url' => $urls['ios'] ?? null,
+                'pc_url' => $urls['pc'] ?? null,
             ],
         ];
 
@@ -190,8 +191,8 @@ class LarkMessage
 
             return array_merge([
                 'msg_type' => 'interactive',
-                'content'  => [
-                    'config'   => ['wide_screen_mode' => true],
+                'content' => [
+                    'config' => ['wide_screen_mode' => true],
                     'elements' => $elements,
                 ],
             ], $this->additionalParams);
@@ -199,7 +200,7 @@ class LarkMessage
 
         return array_merge([
             'msg_type' => 'text',
-            'content'  => ['text' => $body],
+            'content' => ['text' => $body],
         ], $this->additionalParams);
     }
 }

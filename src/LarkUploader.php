@@ -38,15 +38,14 @@ class LarkUploader
      */
     const FILE_TYPES = [
         // Documents
-        'pdf'    => 'pdf',
-        'doc'    => 'doc',
-        'xls'    => 'xls',
-        'ppt'    => 'ppt',
-        'txt'    => 'txt',
+        'pdf' => 'pdf',
+        'doc' => 'doc',
+        'xls' => 'xls',
+        'ppt' => 'ppt',
         // Audio
-        'opus'   => 'opus',
+        'opus' => 'opus',
         // Video
-        'mp4'    => 'mp4',
+        'mp4' => 'mp4',
         // Generic binary fallback
         'stream' => 'stream',
     ];
@@ -71,11 +70,11 @@ class LarkUploader
      *
      * Validates extension against IMAGE_TYPES before uploading.
      *
-     * @param  string  $path       Absolute path to the image file
+     * @param  string  $path  Absolute path to the image file
      * @param  string  $imageType  'message' (default) | 'avatar'
-     * @return string  image_key   Use this in LarkFile::create()->image($key)
+     * @return string image_key   Use this in LarkFile::create()->image($key)
      *
-     * @throws CouldNotSendNotification  if file missing or extension unsupported
+     * @throws CouldNotSendNotification if file missing or extension unsupported
      */
     public function uploadImage(string $path, string $imageType = 'message'): string
     {
@@ -102,7 +101,7 @@ class LarkUploader
     /**
      * Upload an image from raw binary content.
      *
-     * @param  string  $content   Raw binary bytes
+     * @param  string  $content  Raw binary bytes
      * @param  string  $filename  e.g. 'photo.jpg' — sets the filename in the request
      */
     public function uploadImageFromContent(
@@ -127,12 +126,12 @@ class LarkUploader
      * Validates extension against FILE_TYPES keys.
      * Uses FILE_TYPES to look up the correct Lark file_type value for the API call.
      *
-     * @param  string       $path      Absolute path to the file
+     * @param  string  $path  Absolute path to the file
      * @param  string|null  $fileType  Override the detected Lark file_type.
      *                                 If null, auto-detected from FILE_TYPES.
-     * @return string  file_key  Use this in LarkFile::create()->file($key)
+     * @return string file_key  Use this in LarkFile::create()->file($key)
      *
-     * @throws CouldNotSendNotification  if file missing or extension not in FILE_TYPES
+     * @throws CouldNotSendNotification if file missing or extension not in FILE_TYPES
      */
     public function uploadFile(string $path, ?string $fileType = null): string
     {
@@ -178,9 +177,9 @@ class LarkUploader
      * Validates the extension against AUDIO_EXTENSIONS (subset of FILE_TYPES).
      * Uses FILE_TYPES to resolve the Lark file_type value.
      *
-     * @return string  file_key  Use this in LarkFile::create()->audio($key)
+     * @return string file_key  Use this in LarkFile::create()->audio($key)
      *
-     * @throws CouldNotSendNotification  if file missing or extension not in AUDIO_EXTENSIONS
+     * @throws CouldNotSendNotification if file missing or extension not in AUDIO_EXTENSIONS
      */
     public function uploadAudio(string $path, ?string $fileType = null): string
     {
@@ -203,9 +202,9 @@ class LarkUploader
      * Validates the extension against VIDEO_EXTENSIONS (subset of FILE_TYPES).
      * Uses FILE_TYPES to resolve the Lark file_type value ('mp4').
      *
-     * @return string  file_key  Use this in LarkFile::create()->video($key)
+     * @return string file_key  Use this in LarkFile::create()->video($key)
      *
-     * @throws CouldNotSendNotification  if file missing or extension not in VIDEO_EXTENSIONS
+     * @throws CouldNotSendNotification if file missing or extension not in VIDEO_EXTENSIONS
      */
     public function uploadVideo(string $path): string
     {
@@ -225,14 +224,14 @@ class LarkUploader
      * which in turn validates against IMAGE_TYPES / FILE_TYPES / etc.
      *
      * @param  \Illuminate\Http\UploadedFile  $uploadedFile
-     * @return string  image_key or file_key
+     * @return string image_key or file_key
      *
      * @example
      *   $key = $uploader->uploadFromRequest($request->file('attachment'));
      */
     public function uploadFromRequest(object $uploadedFile): string
     {
-        $path     = $uploadedFile->getRealPath();
+        $path = $uploadedFile->getRealPath();
         $mimeType = $uploadedFile->getMimeType() ?? '';
 
         if (str_starts_with($mimeType, 'image/')) {
@@ -258,9 +257,9 @@ class LarkUploader
 
         try {
             $response = $this->http->post("{$this->baseUri}/im/v1/images", [
-                'timeout'    => $this->timeout,
-                'headers'    => ['Authorization' => "Bearer {$token}"],
-                'multipart'  => [
+                'timeout' => $this->timeout,
+                'headers' => ['Authorization' => "Bearer {$token}"],
+                'multipart' => [
                     ['name' => 'image_type', 'contents' => $imageType],
                     ['name' => 'image', 'contents' => fopen($path, 'r'), 'filename' => basename($path)],
                 ],
@@ -271,13 +270,13 @@ class LarkUploader
             if (($data['code'] ?? -1) !== 0) {
                 throw CouldNotSendNotification::larkRespondedWithAnError(
                     (int) ($data['code'] ?? -1),
-                    (string) ($data['msg'] ?? 'unknown')
+                    (string) ($data['msg'] ?? 'unknown'),
                 );
             }
 
             if (empty($data['data']['image_key'])) {
                 throw CouldNotSendNotification::couldNotCommunicateWithLark(
-                    'Image upload succeeded but no image_key was returned.'
+                    'Image upload succeeded but no image_key was returned.',
                 );
             }
 
@@ -285,21 +284,21 @@ class LarkUploader
 
         } catch (GuzzleException $e) {
             throw CouldNotSendNotification::couldNotCommunicateWithLark(
-                "Image upload failed: {$e->getMessage()}"
+                "Image upload failed: {$e->getMessage()}",
             );
         }
     }
 
     private function doUploadFile(string $path, string $fileType): string
     {
-        $token    = $this->larkClient->getTenantToken();
+        $token = $this->larkClient->getTenantToken();
         $filename = basename($path);
-        $size     = filesize($path);
+        $size = filesize($path);
 
         try {
             $response = $this->http->post("{$this->baseUri}/im/v1/files", [
-                'timeout'   => $this->timeout,
-                'headers'   => ['Authorization' => "Bearer {$token}"],
+                'timeout' => $this->timeout,
+                'headers' => ['Authorization' => "Bearer {$token}"],
                 'multipart' => [
                     ['name' => 'file_type', 'contents' => $fileType],
                     ['name' => 'file_name', 'contents' => $filename],
@@ -314,13 +313,13 @@ class LarkUploader
             if (($data['code'] ?? -1) !== 0) {
                 throw CouldNotSendNotification::larkRespondedWithAnError(
                     (int) ($data['code'] ?? -1),
-                    (string) ($data['msg'] ?? 'unknown')
+                    (string) ($data['msg'] ?? 'unknown'),
                 );
             }
 
             if (empty($data['data']['file_key'])) {
                 throw CouldNotSendNotification::couldNotCommunicateWithLark(
-                    'File upload succeeded but no file_key was returned.'
+                    'File upload succeeded but no file_key was returned.',
                 );
             }
 
@@ -328,7 +327,7 @@ class LarkUploader
 
         } catch (GuzzleException $e) {
             throw CouldNotSendNotification::couldNotCommunicateWithLark(
-                "File upload failed: {$e->getMessage()}"
+                "File upload failed: {$e->getMessage()}",
             );
         }
     }
@@ -339,7 +338,7 @@ class LarkUploader
     {
         if (! file_exists($path) || ! is_readable($path)) {
             throw CouldNotSendNotification::couldNotCommunicateWithLark(
-                "File not found or not readable: {$path}"
+                "File not found or not readable: {$path}",
             );
         }
     }
@@ -355,7 +354,7 @@ class LarkUploader
 
         if (! in_array($ext, $allowed, true)) {
             throw CouldNotSendNotification::couldNotCommunicateWithLark(
-                "Unsupported {$type} extension '.{$ext}'. Allowed: " . implode(', ', $allowed)
+                "Unsupported {$type} extension '.{$ext}'. Allowed: " . implode(', ', $allowed),
             );
         }
     }
@@ -375,14 +374,14 @@ class LarkUploader
 
     private function downloadToTemp(string $url): string
     {
-        $ext      = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'tmp';
+        $ext = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'tmp';
         $tempPath = sys_get_temp_dir() . '/lark_upload_' . uniqid() . '.' . $ext;
 
         try {
             $this->http->get($url, ['sink' => $tempPath, 'timeout' => $this->timeout]);
         } catch (GuzzleException $e) {
             throw CouldNotSendNotification::couldNotCommunicateWithLark(
-                "Failed to download file from URL: {$e->getMessage()}"
+                "Failed to download file from URL: {$e->getMessage()}",
             );
         }
 
@@ -391,7 +390,7 @@ class LarkUploader
 
     private function contentToTemp(string $content, string $filename): string
     {
-        $ext      = pathinfo($filename, PATHINFO_EXTENSION) ?: 'tmp';
+        $ext = pathinfo($filename, PATHINFO_EXTENSION) ?: 'tmp';
         $tempPath = sys_get_temp_dir() . '/lark_upload_' . uniqid() . '.' . $ext;
 
         file_put_contents($tempPath, $content);

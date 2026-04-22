@@ -6,8 +6,8 @@ use Illuminate\Support\Facades\Facade;
 use NotificationChannels\Lark\LarkClient;
 
 /**
- * @method static array  sendViaWebhook(string $webhookUrl, array $payload)
- * @method static array  sendViaBot(string $receiveId, string $receiveIdType, array $payload)
+ * @method static array sendViaWebhook(string $webhookUrl, array $payload)
+ * @method static array sendViaBot(string $receiveId, string $receiveIdType, array $payload)
  * @method static string getTenantToken()
  * @method static string uploadImage(string $path, string $imageType = 'message')
  * @method static string uploadFile(string $path, ?string $fileType = null)

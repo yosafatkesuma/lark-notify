@@ -84,13 +84,13 @@ class LarkLocation
     {
         if ($this->lat === null || $this->lon === null) {
             throw CouldNotSendNotification::couldNotCommunicateWithLark(
-                'LarkLocation requires both latitude() and longitude().'
+                'LarkLocation requires both latitude() and longitude().',
             );
         }
 
         return array_merge([
             'msg_type' => 'text',
-            'content'  => [
+            'content' => [
                 'text' => "📍 Location\nLatitude: {$this->lat}\nLongitude: {$this->lon}",
             ],
             '_meta' => ['latitude' => $this->lat, 'longitude' => $this->lon],
