@@ -21,6 +21,11 @@ class CouldNotSendNotification extends Exception
         return new self("Could not communicate with Lark: {$reason}");
     }
 
+    public static function invalidAttachment(string $reason): self
+    {
+        return new self("Invalid Lark attachment: {$reason}");
+    }
+
     public static function missingCredentials(): self
     {
         return new self(

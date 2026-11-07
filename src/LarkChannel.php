@@ -30,6 +30,11 @@ class LarkChannel
             /** @var LarkMessage|LarkCard|LarkFile|LarkLocation $message */
             $message = $notification->toLark($notifiable);
 
+            // Upload any attachments added by local path, UploadedFile or raw bytes
+            if (method_exists($message, 'needsUpload') && $message->needsUpload()) {
+                $message->resolveAttachments($this->lark->uploader());
+            }
+
             // ->to() on the message takes priority over routeNotificationForLark()
             $chatId = $message->getChatId()
                 ?? $notifiable->routeNotificationFor('lark', $notification);

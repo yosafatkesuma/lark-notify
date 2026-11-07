@@ -2,10 +2,11 @@
 
 namespace NotificationChannels\Lark\Messages\Concerns;
 
+use NotificationChannels\Lark\Exceptions\CouldNotSendNotification;
 use NotificationChannels\Lark\LarkUploader;
 
 /**
- * Shared attachment upload logic for LarkMessage and LarkCard.
+ * Attachment handling for LarkCard.
  *
  * Each attachment can be sourced from one of four inputs:
  *
@@ -16,6 +17,9 @@ use NotificationChannels\Lark\LarkUploader;
  *
  * Pending uploads (2, 3, 4) are resolved automatically by LarkChannel
  * before the message is sent.
+ *
+ * Lark cards can only embed images. File, audio and video attachments
+ * cannot be rendered inside a card — send those with LarkFile instead.
  */
 trait HasAttachments
 {
@@ -43,10 +47,26 @@ trait HasAttachments
      * @example
      *   ->image('img_key_abc123')
      *   ->image('img_key_abc123', 'Architecture diagram')
+     *   ->image('img_key_abc123', mode: 'crop_center', preview: false)
+     *
+     * @param  string|null  $mode  crop_center | fit_horizontal | stretch — omitted when null,
+     *                              so Lark uses its own default (crop_center)
+     * @param  bool|null  $preview  Whether clicking opens a full-size preview — omitted when null
+     *                              (Lark default: true)
      */
-    public function image(string $imageKey, ?string $caption = null): static
-    {
-        $this->attachments[] = $this->makeEntry('image', key: $imageKey, caption: $caption);
+    public function image(
+        string $imageKey,
+        ?string $caption = null,
+        ?string $mode = null,
+        ?bool $preview = null,
+    ): static {
+        $this->attachments[] = $this->makeEntry(
+            'image',
+            key: $imageKey,
+            caption: $caption,
+            imgMode: $mode,
+            imgPreview: $preview,
+        );
 
         return $this;
     }
@@ -99,9 +119,19 @@ trait HasAttachments
      *   ->attachImage(storage_path('app/photo.jpg'))
      *   ->attachImage('/tmp/banner.png', 'New banner')
      */
-    public function attachImage(string $path, ?string $caption = null): static
-    {
-        $this->attachments[] = $this->makeEntry('image', localPath: $path, caption: $caption);
+    public function attachImage(
+        string $path,
+        ?string $caption = null,
+        ?string $mode = null,
+        ?bool $preview = null,
+    ): static {
+        $this->attachments[] = $this->makeEntry(
+            'image',
+            localPath: $path,
+            caption: $caption,
+            imgMode: $mode,
+            imgPreview: $preview,
+        );
 
         return $this;
     }
@@ -198,14 +228,33 @@ trait HasAttachments
      *   // From GD resource
      *   ob_start(); imagepng($gdImage); $bytes = ob_get_clean();
      *   ->attachImageData($bytes, 'generated.png', 'Generated chart')
+     *
+     * Passing an already-uploaded image_key here is deprecated but still
+     * supported for backwards compatibility — use image($imageKey) instead.
      */
-    public function attachImageData(string $imgKey, string $filename, ?string $caption = null, ?string $mode = 'fit_horizontal', ?bool $preview = true): static
-    {
+    public function attachImageData(
+        string $binaryContent,
+        string $filename,
+        ?string $caption = null,
+        ?string $mode = null,
+        ?bool $preview = null,
+    ): static {
+        if ($this->looksLikeImageKey($binaryContent)) {
+            trigger_error(
+                'Passing an image_key to attachImageData() is deprecated; use image($imageKey) instead.',
+                E_USER_DEPRECATED,
+            );
+
+            return $this->image($binaryContent, $caption, $mode, $preview);
+        }
+
         $this->attachments[] = $this->makeEntry(
             'image',
-            binaryContent: $imgKey,
+            binaryContent: $binaryContent,
             filename: $filename,
             caption: $caption,
+            imgMode: $mode,
+            imgPreview: $preview,
         );
 
         return $this;
@@ -308,6 +357,11 @@ trait HasAttachments
      */
     public function resolveAttachments(LarkUploader $uploader): static
     {
+        // Fail before uploading anything that the card could not display anyway
+        foreach ($this->attachments as $a) {
+            $this->assertEmbeddable($a);
+        }
+
         foreach ($this->attachments as &$a) {
             if ($a['key'] !== null) {
                 continue;
@@ -349,22 +403,47 @@ trait HasAttachments
 
     /**
      * Build Lark card element blocks for all resolved attachments.
-     * Called by toArray() in LarkMessage and LarkCard.
+     * Called by LarkCard::toArray().
+     *
+     * @throws CouldNotSendNotification for non-image attachments or pending uploads
      */
     protected function buildAttachmentElements(): array
     {
         $elements = [];
 
         foreach ($this->attachments as $a) {
-            $elements[] = match ($a['kind']) {
-                'image' => [
-                    'tag' => 'img',
-                    'img_key' => $a['binaryContent'],
-                    'alt' => ['tag' => 'plain_text', 'content' => ''],
-                    'mode' => $a['imgMode'],
-                    'preview' => $a['imgPreview']
-                ],
-            };
+            $this->assertEmbeddable($a);
+
+            if ($a['key'] === null) {
+                throw CouldNotSendNotification::invalidAttachment(
+                    'Card image has not been uploaded yet. Send the card through LarkChannel, '
+                    . 'or call resolveAttachments($client->uploader()) before toArray().',
+                );
+            }
+
+            if ($a['caption'] !== null && $a['caption'] !== '') {
+                $elements[] = [
+                    'tag' => 'div',
+                    'text' => ['tag' => 'lark_md', 'content' => $a['caption']],
+                ];
+            }
+
+            $img = [
+                'tag' => 'img',
+                'img_key' => $a['key'],
+                'alt' => ['tag' => 'plain_text', 'content' => $a['caption'] ?? ''],
+            ];
+
+            // Only send display options that were set, so Lark applies its own defaults
+            if ($a['imgMode'] !== null) {
+                $img['mode'] = $a['imgMode'];
+            }
+
+            if ($a['imgPreview'] !== null) {
+                $img['preview'] = $a['imgPreview'];
+            }
+
+            $elements[] = $img;
         }
 
         return $elements;
@@ -394,6 +473,30 @@ trait HasAttachments
             'caption',
             'imgMode',
             'imgPreview');
+    }
+
+    private function assertEmbeddable(array $attachment): void
+    {
+        if ($attachment['kind'] !== 'image') {
+            throw CouldNotSendNotification::invalidAttachment(
+                "Lark cards can only embed images, not {$attachment['kind']} attachments. "
+                . 'Send it as a separate message with LarkFile instead.',
+            );
+        }
+    }
+
+    /**
+     * Distinguish an image_key (legacy attachImageData() usage) from raw image bytes.
+     *
+     * Lark image keys are short printable tokens such as "img_v3_02ab_...".
+     * Every image format Lark accepts (jpg, png, gif, webp, bmp, tiff) starts
+     * with binary magic bytes, so it can never be a short printable token.
+     * The prefix is deliberately not required, in case Lark changes its key format.
+     */
+    private function looksLikeImageKey(string $value): bool
+    {
+        return strlen($value) <= 255
+            && preg_match('/^[\x21-\x7E]+$/', $value) === 1;
     }
 
     private function kindFromMime(string $mime): string
